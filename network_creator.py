@@ -55,19 +55,22 @@ def create_4GS_PV_Wind_Storage():
 
 def create_case14_PV_Wind_Storage(): 
     net = nw.case14()
-    
-    net["gen"].drop(3, inplace=True)
-    net["gen"].drop(2, inplace=True)
+#    print(here)
+    for gen in net.gen.index: 
+        net["gen"].drop(gen, inplace=True)
+   
     net["shunt"].drop(0, inplace=True)
-    
-    net.gen.bus.at[0] = 5
-    net.gen.bus.at[1] = 11
-    
-    net.gen.p_mw[1] = 150
     
     pp.create_storage(net, 2, p_mw=-10, max_e_mwh=10, soc_percent=1)
     pp.create_gen(net, 2, p_mw=0, slack=True, type="bat")
+    
+    pp.create_storage(net, 12, p_mw=-10, max_e_mwh=10, soc_percent=1)
+    pp.create_gen(net, 12, p_mw=0, slack=True, type="bat")
+    
     pp.create_sgen(net, 7, p_mw=200, type="solar")
+    pp.create_sgen(net, 10, p_mw=200, type="solar")
+    
+    pp.create_sgen(net, 11, p_mw = 200, type="wind")
     pp.create_sgen(net, 13, p_mw = 200, type="wind")
     
     return net
