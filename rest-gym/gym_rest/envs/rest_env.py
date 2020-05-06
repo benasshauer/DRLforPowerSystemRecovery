@@ -1,7 +1,8 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
-Simulate restoration environment.
+Simulate the simplified restoration environment.
 """
 
 # core modules
@@ -16,6 +17,7 @@ from gym import spaces
 import gym
 import numpy as np
 import pandapower as pp 
+import pandapower.topology as top
 import pp_helpers 
 import network_creator
 import copy
@@ -35,18 +37,16 @@ class RestEnv(gym.Env):
         self.__version__ = "0.1.0"
         logging.info("RestEnv - Version {}".format(self.__version__))
         
-        self.TOTAL_TIME_STEPS = 99
+        self.TOTAL_TIME_STEPS = 49
         # case 14: 49
         # case 4: 29
-        # case 39: 
+#         case 39: 99
 
 
 
-#        self.net1 = nw.case4gs()
 #        self.net1 = network_creator.create_4GS_PV_Wind_Storage()
-#        self.net1 = network_creator.create_case14_PV_Wind_Storage()
-        self.net1 = network_creator.create_case39_PV_Wind_Storage()
-
+        self.net1 = network_creator.create_case14_PV_Wind_Storage()
+#        self.net1 = network_creator.create_case39_PV_Wind_Storage()
 
 #        self.net1 = pp_helpers.create_line_net()
 #        self.net1["gen"].drop(0, inplace=True)
@@ -215,6 +215,9 @@ class RestEnv(gym.Env):
             
             (cranked_by_net, self.cranked_isolated_sgen) = pp_helpers.crank_sgen(self.net2, solar_sgens[n])
             if cranked_by_net or self.cranked_isolated_sgen:
+                current_state = self.net2.sgen.in_service.at[solar_sgens[n]]
+                if current_state: self.cranked_isolated_sgen = False
+                
                 self.net2.sgen.in_service.at[solar_sgens[n]] = 1
             
         elif m == 7: 
@@ -228,6 +231,9 @@ class RestEnv(gym.Env):
             
             (cranked_by_net, self.cranked_isolated_sgen) = pp_helpers.crank_sgen(self.net2, wind_sgens[n]) 
             if cranked_by_net or self.cranked_isolated_sgen:
+                current_state = self.net2.sgen.in_service.at[wind_sgens[n]]
+                if current_state: self.cranked_isolated_sgen = False
+                
                 self.net2.sgen.in_service.at[wind_sgens[n]] = 1
                 
         elif m == 9: 
@@ -253,8 +259,10 @@ class RestEnv(gym.Env):
         # (inlcudes pf calculation)
         pp_helpers.scale_islanded_areas2(self.net2)
         
+        pp_helpers.run_dcpowerflow(self.net2, scale_gens=False, scale_loads=False)
+        
         pp_helpers.update_storage_SOC(self.net2, self.action_duration[m])
-            
+        
         
         self._update_memory()
         self._update_parameters()
@@ -472,7 +480,7 @@ class RestEnv(gym.Env):
         returns the action list as a pandas dataframe
         """
         action_list = []
-        action_names = ["activate line {}", "deactivate line {}", "acitvate load {}", "deactivate load {}", 
+        action_names = ["activate line {}", "deactivate line {}", "activate load {}", "deactivate load {}", 
                "activate gen {}", "deactivate gen {}", "activate PV power plant {}", 
                "deactivate PV power plant {}", "activate wind power plant {}", "deactivate wind power plant {}", 
                "activate storage {}", "deactivate storage {}"]
