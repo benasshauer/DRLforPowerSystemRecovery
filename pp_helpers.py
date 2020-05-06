@@ -282,7 +282,7 @@ def plot_render(net, save=False, draw=True, num='00', action='action_name'):
     plot.draw_collections([lc, sc, gc, bc, ubc, ibc, tc, sg, sgo, sbc, lic, bic, lo_on, lo_off, ec], figsize=(10,8), draw=draw) # plot lines, buses and bus indices        
 #    seaborn.palplot(colors)
     
-    plt.text(np.mean(net.bus_geodata.x), max(net.bus_geodata.y), action, ha='center', va='center',
+    plt.text(np.mean(net.bus_geodata.x), max(net.bus_geodata.y)+.3, action, ha='center', va='center',
              size=20, bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="k", lw=2))
     
     if save:
@@ -440,6 +440,7 @@ def scale_islanded_areas2(net):
     that power generating units are scaled down. The actual process of downscaling 
     is not implemented in this version.  
     """
+#    print("here")
     mg = top.create_nxgraph(net)
     ub = top.unsupplied_buses(net)
     run_dcpowerflow(net, scale_gens=False, scale_loads=True)
@@ -452,7 +453,9 @@ def scale_islanded_areas2(net):
             for load_bus in net.load[net.load["bus"].isin(area)].bus:
                 if slack_power[index] > 0:
                     net.load.scaling[net.load["bus"]==load_bus] = 0
-                    slack_power[index] -= net.load[net.load["bus"]==load_bus].p_mw
+#                    slack_power[index] -= net.load[net.load["bus"]==load_bus].p_mw
+                    load_index = net.load[net.load["bus"]==load_bus].index
+                    slack_power[index] -= net.res_load.p_mw[load_index]
                 
 def set_unsupplied_areas_out_of_service(net):
     """
@@ -474,14 +477,16 @@ def plot_restoration_process(env, model, action_list, save=False):
     load_supply = []
     rewards = []
     actions = []
+    action_names = []
     done = False
     while not done:
         action, _states = model.predict(obs)
         actions.append(action)
         load_supply.append(env.get_attr("load_supply")[0])
-        time.append(action_list.times.values[action])
+        time.append(action_list[0].duration[action[0]])
+        action_names.append(action_list[0].name[action[0]])
         obs, reward, done, info = env.step(action)
-        rewards.append(reward)
+        rewards.append(reward[0])
     
     load_supply[-1] = 1
     time = np.cumsum(time)
@@ -489,21 +494,36 @@ def plot_restoration_process(env, model, action_list, save=False):
 #    rewards = np.cumsum(rewards)
     
     fig, ax1 = plt.subplots()
-    color = 'tab:red'
-    ax1.set_xlabel('time/s')
-    ax1.set_ylabel('load supplied', color = color)
+    color = 'black'
+    ax1.set_xlabel('Time Step')
+    ax1.set_ylabel('Load Supply Level', color = color)
     ax1.plot(time, load_supply, color=color)
     
     ax2 = ax1.twinx()
-    color = 'tab:blue'
-    ax2.set_ylabel('rewards', color=color)
-    ax2.plot(time, rewards)
+    color = '#C0C0C0'
+    ax2.set_ylabel('Rewards', color="gray")
+    bar_plot = ax2.bar(time, rewards, color=color, width=.5)
+    ax1.set_zorder(ax2.get_zorder()+1)
+    ax1.patch.set_visible(False)
+    
+    def autolabel(rects):
+        for idx,rect in enumerate(bar_plot):
+            ax2.text(rect.get_x() + rect.get_width()/2., 1.1*max(rewards),
+                action_names[idx],
+                ha='center', va='bottom', rotation=60)
+
+#    autolabel(bar_plot)
+    print("ACTION SEQUENCE: ", action_names)
+    print("REWARDS: ", rewards)
+    print("Loads supplied: ", load_supply)
     
     fig.tight_layout()
     if save: plt.savefig('plots/restoration_process.png')
+    
     plt.show()
     
-    return load_supply, time-time[0], actions, rewards
+#    return load_supply, time-time[0], actions, rewards
+    return
 
 def add_slack_gens(net, slacks):
     return
