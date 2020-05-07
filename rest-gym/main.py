@@ -47,7 +47,9 @@ model = A2C.load("trained_agents/A2C_14node_200000steps_newrewards", env=env)
 
 ### enjoy the trained agent
 
-
+obs = env.reset()
+action = model.predict(obs)
+obs, reward, done, info = env.step(action)
 
 ### save model
 
@@ -59,6 +61,7 @@ model = A2C.load("trained_agents/A2C_14node_200000steps_newrewards", env=env)
 
 # get an action list of the env to understand the different actions
 
-action_list_func = env.env_method("get_action_df")
+action_list = env.env_method("get_action_df")
+#pp_helpers.plot_restoration_process(env, model, action_list)
 
 
