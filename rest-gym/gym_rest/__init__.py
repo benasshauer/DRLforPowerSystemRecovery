@@ -5,7 +5,7 @@ uncommenting and commenting the register function
 """
 
 register(
-    id='Rest-v0',
+    id='Restoration_Env-v0',
     entry_point='gym_rest.envs:RestEnv',
 )
 
