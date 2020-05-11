@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+"""
+contains wrapper modules, plot functions and other methods that help the agent 
+to interact with the environment. 
+"""
 import pandapower as pp
 import pandapower.plotting as plot
 import pandapower.topology as top
@@ -14,53 +18,6 @@ from PIL import Image
 #def createNet(name):
 #    verySimpleNet(name=name)
 
-#def simppleNet():
-#    net = pp.create_empty_network()
-#    
-#    b0 = pp.create_bus(net, name='B0', vn_kv=110., geodata=(0,0))
-#    b1 = pp.create_bus(net, name='B1', vn_kv=110., geodata=(5,0))
-#    b2 = pp.create_bus(net, name='B2', vn_kv=110., geodata=(5,5))
-#    
-#    l1 = pp.create_line(net, b0, b1, length_km=50., 
-#                    std_type='149-AL1/24-ST1A 110.0', name='line 1')
-#    l2 = pp.create_line(net, b0, b2, length_km=50., 
-#                    std_type='149-AL1/24-ST1A 110.0', name='line 2')
-#    l3 = pp.create_line(net, b1, b2, length_km=50., 
-#                    std_type='149-AL1/24-ST1A 110.0', name='line 3')
-#    
-#    pp.create_load(net, b1, p_mw=40, controllable = False)
-#    pp.create_load(net, b2, p_mw=40, controllable = False)
-#    
-#    g1 = pp.create_gen(net, b0, p_mw=100, min_p_mw=0, max_p_mw=200, 
-#                   controllable=True, vn_kv=22, slack=True)
-#    g2 = pp.create_gen(net, b2, p_mw=25, min_p_mw=0, vn_kv=22, max_p_mw=50, 
-#                   controllable=True)
-#    
-#    s12 = pp.create_switch(net, b0, element=l1, et="l", closed=True)
-#    s13 = pp.create_switch(net, b0, element=l2, et="l", closed=True)
-#    s14 = pp.create_switch(net, b1, element=l3, et="l", closed=True)
-#    
-#    return net
-#
-#def verySimpleNet(name):
-#    net = pp.create_empty_network()
-#    
-#    b0 = pp.create_bus(net, name='B0', vn_kv=110., geodata=(0,1))
-#    b1 = pp.create_bus(net, name='B1', vn_kv=110., geodata=(5,0))
-#    eg = pp.create_ext_grid(net, b0)
-#    
-#    l1 = pp.create_line(net, b0, b1, length_km=50., 
-#                    std_type='149-AL1/24-ST1A 110.0', name='line 1')
-#    
-#    pp.create_load(net, b1, p_mw=40, controllable = False)
-#    
-#    g1 = pp.create_gen(net, b0, p_mw=100, min_p_mw=0, max_p_mw=200, 
-#                   controllable=True, vn_kv=22, slack=True)
-#    
-#    s12 = pp.create_switch(net, b0, element=l1, et="l", closed=True)
-#
-#    pp.to_json(net, name+'.json')
-#    del net
     
 def create_line_net(): 
     net = pp.create_empty_network()
@@ -95,18 +52,6 @@ def create_line_net():
     
     return net
     
-def deformNet(name):
-    createNet(name=name)
-    
-    deformedNet = pp.from_json(name+'.json')
-    
-    deformedNet.gen.in_service.at[0] = random.randint(0,1)
-    deformedNet.switch.closed.at[0] = False
-    deformedNet.load.in_service.at[0] = random.randint(0,1)
-    
-    pp.to_json(deformedNet, name+'.json')
-    return deformedNet
-
 def switch_line_at_switch(net, switch):
     """
     takes a net and the index of a switch in net as input. 
@@ -164,7 +109,11 @@ def add_switches_to_lines(net):
 def run_powerflow(net, scale_loads=False, scale_gens=False):
     """
     runs a simple pf. If an error occurs (powerflow doesn't converge), 
-    all loads and gens are scaled down to 0. Then the pf is run again 
+    all loads and gens are scaled down to 0. Then the pf is run again. 
+    
+    Return
+    ------
+    single boolean: True if pf converged, false otherwise
     """
     pf_converges = True
     try:
@@ -185,6 +134,10 @@ def run_dcpowerflow(net, scale_loads=False, scale_gens=False):
     """
     runs a simple DC pf. If an error occurs (powerflow doesn't converge), 
     all loads and gens are scaled down to 0. Then the DC pf is run again 
+    
+    Return
+    ------
+    single boolean: True if pf converged, false otherwise
     """
     pf_converges = True
     try:
@@ -229,6 +182,9 @@ def plot_line_numbers(net):
     plot.draw_collections([lc, bc, tc, lic, lo, ec], figsize=(8,6)) # plot lines, buses and bus indices
 
 def plot_visualize(net):
+    """
+    visualization of the network that includes more grid elements
+    """
     colors = seaborn.color_palette()
     
     lc = plot.create_line_collection(net, net.line.index, use_bus_geodata=True, color="grey", zorder=1) #create lines
@@ -253,6 +209,10 @@ def plot_visualize(net):
 #    plot.draw_collections([lc, su, bc, ec], figsize=(10,8)) # plot lines, buses and bus indices 
 
 def plot_render(net, save=False, draw=True, num='00', action='action_name'): 
+    """
+    renders a plot of the network with the last action executed. Can be used to 
+    safe a frame of the restoration process. 
+    """
     colors = seaborn.color_palette('RdBu_r', 7)
     
     lc = plot.create_line_collection(net, net.line.index, use_bus_geodata=True, color="grey", zorder=1) #create lines
@@ -280,7 +240,6 @@ def plot_render(net, save=False, draw=True, num='00', action='action_name'):
     bic = plot.create_annotation_collection(size=.15, texts=np.char.mod('B%d', buses), coords=zip(net.bus_geodata.x, net.bus_geodata.y), zorder=5, color='k')
 
     plot.draw_collections([lc, sc, gc, bc, ubc, ibc, tc, sg, sgo, sbc, lic, bic, lo_on, lo_off, ec], figsize=(10,8), draw=draw) # plot lines, buses and bus indices        
-#    seaborn.palplot(colors)
     
     plt.text(np.mean(net.bus_geodata.x), max(net.bus_geodata.y)+.3, action, ha='center', va='center',
              size=20, bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="k", lw=2))
@@ -289,6 +248,9 @@ def plot_render(net, save=False, draw=True, num='00', action='action_name'):
         plt.savefig("plots/frame{}.png".format(num))
         
 def plot_sequence(env, model, runs=1, steps=19): 
+    """
+    Generates a gif of the restoration process
+    """
     obs = env.reset()
     num = 0
     env.env_method('_render', True, False, format(num, '02d'))
@@ -374,15 +336,24 @@ def destroy_grid3(net, pos, n=2, dc=True):
     else: pp.runpp(net)
     
 def add_sgen(net, bus, p_mw, q_mvar=0):
+    """
+    Adds sgen at given bus with p_mw
+    """
     pp.create_sgen(net, bus, p_mw, q_mvar)
     
 def switch_load(net, load):
+    """
+    switches laod from OFF to ON or vice versa. 
+    """
     if net.load.scaling[load] == 1:
         net.load.scaling[load] = 0
     elif net.load.scaling[load] == 0:
         net.load.scaling[load] = 1
         
 def switch_sgen(net, sgen):
+    """
+    switches sgen scaling from 0 to 1 or vice versa.
+    """
     if net.sgen.scaling[sgen] == 1:
         net.sgen.scaling[sgen] = 0
     elif net.sgen.scaling[sgen] == 0:
@@ -392,6 +363,10 @@ def get_islanded_buses(net):
     """
     returns buses with loads that are without connection to an external grid, 
     but supplied by a generator
+    
+    Return
+    -------
+    df of islanded buses of net
     """
     ub = top.unsupplied_buses(net)
     isolated_loads = net.load[net.load["bus"].isin(ub)]
@@ -400,7 +375,7 @@ def get_islanded_buses(net):
     islanded_loads = pandas.merge(supplied_loads, isolated_loads)
     return islanded_loads.bus
 
-def scale_islanded_areas(net):
+def scale_islanded_areas_old(net):
     """
     downscales loads in islanded areas where the nominal loads exceeds the 
     maximal power output of the supplying generator
@@ -433,14 +408,13 @@ def scale_islanded_areas(net):
 #                total_area_load -= net.load.p_mw[net.load["bus"]==load_bus][load_bus]
                 total_area_load -= net.load.p_mw[load_bus]
                 
-def scale_islanded_areas2(net): 
+def scale_islanded_areas(net): 
     """
     downscales loads in islanded areas, so that the supplying slack gen provides 
     no or negative power. If the slack gen provides negative power, it is assumed 
     that power generating units are scaled down. The actual process of downscaling 
     is not implemented in this version.  
     """
-#    print("here")
     mg = top.create_nxgraph(net)
     ub = top.unsupplied_buses(net)
     run_dcpowerflow(net, scale_gens=False, scale_loads=True)
@@ -491,7 +465,6 @@ def plot_restoration_process(env, model, action_list, save=False):
     load_supply[-1] = 1
     time = np.cumsum(time)
     time = time - time[0]
-#    rewards = np.cumsum(rewards)
     
     fig, ax1 = plt.subplots()
     color = 'black'
@@ -526,6 +499,8 @@ def plot_restoration_process(env, model, action_list, save=False):
     return
 
 def add_slack_gens(net, slacks):
+#    TODO implemet automated additions of gens to an existing pp network to 
+#    modelling 
     return
 
 def check_for_cranking_power(net, sgen_bus):
@@ -571,7 +546,10 @@ def crank_sgen(net, sgen_index):
     source e.g. external grid or a storage system that can supply the sgen with the required 
     cranking power to start.
     
-    returns a single bool
+    Return
+    -------
+    single boolean that contains information whether the given sgen 
+    was provided with cranking power by an external grid or via a storage unit. 
     """
     cranked_by_net = False
     cranked_by_storage = False
