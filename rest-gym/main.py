@@ -1,5 +1,8 @@
+# -*- coding: utf-8 -*-
 """
-@author: Benedikt
+@author: benasshauer
+
+main file to train & load agent and test them in the restoration environment.
 """
 
 import gym
@@ -48,7 +51,7 @@ model = A2C.load("trained_agents/A2C_14node_200000steps_newrewards", env=env)
 ### enjoy the trained agent
 
 obs = env.reset()
-action = model.predict(obs)
+action, _ = model.predict(obs)
 obs, reward, done, info = env.step(action)
 
 ### save model
