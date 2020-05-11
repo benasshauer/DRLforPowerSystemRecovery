@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+"""
+module that creates pandapower networks modified to be used with the restoration 
+environment. Most notably, storage units are equipped with slack gen to enable 
+the creation of power islands. 
+"""
 import pandapower as pp
 import pandapower.networks as nw
 import pp_helpers
@@ -41,6 +47,14 @@ def create_line_net():
     return net
 
 def create_4GS_PV_Wind_Storage():
+    """
+    creates a simple 4 node network fitted for providing cranking power to 
+    islanded areas i.e. storage units are treated as slack nodes
+    
+    Return
+    -------
+    4 node pp network
+    """
     net = nw.case4gs()
     net["gen"].drop(0, inplace=True)
 
@@ -54,8 +68,16 @@ def create_4GS_PV_Wind_Storage():
     return net
 
 def create_case14_PV_Wind_Storage(): 
+    """
+    creates IEEE 14 node network fitted for providing cranking power to 
+    islanded areas i.e. storage units are treated as slack nodes
+    
+    Return
+    ------
+    pp IEEE 14 node network
+    """
+    
     net = nw.case14()
-#    print(here)
     for gen in net.gen.index: 
         net["gen"].drop(gen, inplace=True)
    
@@ -76,6 +98,13 @@ def create_case14_PV_Wind_Storage():
     return net
 
 def create_case39_PV_Wind_Storage():
+    """
+    creates IEEE 39 bus test case a pp network. 
+    
+    Return
+    ------
+    pp IEEE 39 nide test case
+    """
     net = nw.case39()
     
     for gen in net.gen.index: 
@@ -102,6 +131,7 @@ def create_case39_PV_Wind_Storage():
     pp.create_sgen(net, 16, p_mw=200, type = "wind")
     pp.create_sgen(net, 4, p_mw=250, type = "solar")
     
+#    decrease load size to match size of sgen capacity 
     net.load.p_mw = .2*net.load.p_mw
     
     return net
