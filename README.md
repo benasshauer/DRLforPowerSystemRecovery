@@ -34,6 +34,6 @@ pip install -e .
 
 The initial state of the environment simulates the depleted state of a power system after a large scale blackout. The agent's task is to restore service for all loads. 
 
-Given suitable wheather conditions renewable energy generators can be used as black start resources, if cranking power is provided by storage units or the grid. The power output of renewable energy generators is determined by a randomly chosen point in time from real wheather data obtained from [renewables.ninja](https://www.renewables.ninja/) for a wind/solar power plant near Berlin, Germany. 
+Given suitable weather conditions renewable energy generators can be used as black start resources, if cranking power is provided by storage units or the grid. The power output of renewable energy generators is determined by a randomly chosen point in time from real wheather data obtained from [renewables.ninja](https://www.renewables.ninja/) for a wind/solar power plant near Berlin, Germany. 
 
 
