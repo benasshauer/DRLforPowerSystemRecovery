@@ -1,5 +1,5 @@
 # DRLforPowerSystemRecovery
-Master Thesis Project @TUBerlin for DRL in power system restoration using renewables.  
+Master Thesis Project for DRL in power system restoration using renewables.  
 
 The goal of this master thesis is to develop DRL techniques that can compute restoration sequences for power systems with high share of renewables. An example for a trained agent is shown below. 
 
